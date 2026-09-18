@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AttemptResultResponse } from '@/shared';
 import { api } from '../lib/api.js';
 import { formatDuration, formatNumber, ordinal } from '../lib/format.js';
@@ -13,6 +13,7 @@ import {
 import { Button } from '../components/Button.js';
 import { Mascot } from '../components/Mascot.js';
 import type { Route } from '../routes.js';
+import { useSession } from '../state/session.js';
 
 const HANDLE = import.meta.env.VITE_SOCIAL_HANDLE ?? '@nimoto';
 
@@ -25,6 +26,10 @@ export function ResultsPanel({
 }) {
   const [shareState, setShareState] = useState<'idle' | 'shared' | 'downloaded' | 'copied' | 'failed'>('idle');
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { user } = useSession();
+  const displayName = user?.displayName ?? null;
+  const walletAddress = user?.walletAddress ?? '';
+  const player = useMemo(() => ({ displayName, walletAddress }), [displayName, walletAddress]);
   const ranked = result.mode === 'ranked';
   // The server-issued invite link carries the player's referral code; the
   // bare origin would hand out shares that credit nobody.
@@ -35,11 +40,11 @@ export function ResultsPanel({
     const canvas = canvasRef.current;
     if (!canvas) return;
     try {
-      drawShareCard(canvas, { result, referralUrl, handle: HANDLE });
+      drawShareCard(canvas, { result, player, referralUrl, handle: HANDLE });
     } catch {
       // Canvas-less environments simply show no preview; text sharing still works.
     }
-  }, [result, referralUrl]);
+  }, [result, player, referralUrl]);
 
   return (
     <div className="space-y-4">
@@ -93,7 +98,7 @@ export function ResultsPanel({
           onClick={async () => {
             void api.track('share_clicked');
             try {
-              const blob = await renderShareCard({ result, referralUrl, handle: HANDLE });
+              const blob = await renderShareCard({ result, player, referralUrl, handle: HANDLE });
               setShareState(await shareCardImage(blob, caption, referralUrl));
             } catch {
               setShareState(await shareOrCopy(result.shareText, referralUrl));
