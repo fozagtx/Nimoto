@@ -1,87 +1,118 @@
-# Nimoto — Daily Brain Sprint
+<p align="center">
+  <img src="./public/mascots/glasses-directions.webp" width="160" alt="The Nimoto mascot">
+</p>
 
-A Nimiq Pay Mini App built around one honest loop: **five questions, one ranked run a day, real NIM for the
-top ranks.** No wagering, no randomness, no casino mechanics — prizes are fixed per rank and published before
-you play.
+<h1 align="center">Nimoto</h1>
+
+<p align="center"><b>Learn something every day. Get paid in NIM for being sharp.</b></p>
+
+Nimoto is a daily learning game that lives inside [Nimiq Pay](https://nimiq.com). Every day at 00:00 UTC a
+new five-question run goes live. You get one ranked shot at it. Answer fast and right, climb the day's
+leaderboard, and the top ten are paid real NIM — straight to the wallet you played with.
+
+No account. No password. No token to buy. Your Nimiq wallet *is* your profile.
+
+## How a day on Nimoto goes
+
+1. **Open Nimoto** in Nimiq Pay, or in any browser and connect your Nimiq wallet.
+2. **Play today's ranked run** — five questions, one at a time, 15 seconds of speed bonus each.
+3. **See where you landed** — score, rank, Top X%, and how much NIM that rank pays.
+4. **Share your card** — a result card with your wallet, your NIM earned and your rank, ready for X.
+5. **Come back tomorrow** to keep your streak alive. Miss a day and it resets.
+
+Not ready to compete? **Practice runs** are unlimited, use different questions, and never touch your rank or
+streak. Learn first, then play for real.
+
+## What you can win
+
+| Rank today | Prize  |
+| ---------- | ------ |
+| 1st        | 30 NIM |
+| 2nd        | 15 NIM |
+| 3rd        | 10 NIM |
+| 4th – 10th | 5 NIM  |
+
+That is a 90 NIM pool every single day, fixed and published before anyone plays. Sponsors can grow the pool
+by sending NIM to the public prize-pool wallet. Winners are paid by hand after the day closes — we contact
+you at the wallet address you played with, so keep that wallet.
+
+## How scoring works
+
+- **1,000 points** for every correct answer.
+- **Up to 500 bonus points** for speed, fading to zero over the first 15 seconds of a question.
+- Wrong answers score zero. A perfect run is 7,500.
+- Ties are broken by total time, so being right *and* quick is what wins.
+
+Everything that matters is decided on the server: the questions you see, the clock, whether you were right,
+your score and your rank. Reloading the page doesn't reset the timer and the correct answer is never sent to
+your device before you answer. It is a fair game for everyone, on any phone.
+
+## Streaks and invites
+
+Every day you finish a ranked run extends your streak. Your streak shows on your profile and on your share
+card — it's the thing people compete over once the leaderboard settles.
+
+Every player has an invite link (`…/?ref=YOURCODE`). Share it, and when a friend connects their wallet and
+finishes their first ranked run, the referral counts for you.
+
+## For builders
+
+Nimoto is one small TypeScript package: a Hono API and a React app that share the same scoring code so the
+browser and the server can never disagree.
 
 ```
-connect wallet → today's challenge → 5 server-controlled questions → score + rank → streak → invite
+src/web      React 18 + Vite + Tailwind Mini App
+src/server   Hono API, game engine, settlement, admin CLI
+src/shared   Scoring, prize ladder, UTC day logic, API contracts
+src/db       Drizzle schema and the question bank
 ```
 
-## Stack
-
-| Layer    | Choice                                                    |
-| -------- | --------------------------------------------------------- |
-| Web      | React 18, TypeScript, Vite, Tailwind CSS                  |
-| API      | Node 22, Hono, Zod                                        |
-| Data     | PostgreSQL 16, Drizzle ORM + migrations                   |
-| Wallet   | `@nimiq/mini-app-sdk` in Nimiq Pay, `@nimiq/hub-api` in the browser, signature verification via `@nimiq/core` |
-| Tests    | Vitest (unit, API integration, web component/flow tests)  |
-
-One package, one `pnpm install`:
-
-```
-src/server      Hono API, game engine, settlement, admin CLI
-src/web         React Mini App
-src/shared      Scoring, prizes, dates, referral + API contracts
-src/db          Drizzle schema and question seed bank
-migrations      Drizzle SQL migrations
-test            server / shared / web test suites
-```
-
-## Quick start
+### Run it locally
 
 ```bash
 nvm use                      # Node 22
 pnpm install
-cp .env.example .env         # then edit DATABASE_URL and ADMIN_API_TOKEN
+cp .env.example .env         # set DATABASE_URL and ADMIN_API_TOKEN
 
 docker run -d --name nimoto-pg -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16
-createdb nimoto              # or: docker exec nimoto-pg createdb -U postgres nimoto
-
-pnpm db:migrate
-pnpm db:seed                 # 116-question bank
-pnpm dev                     # API on :8787, web on :5173
+createdb nimoto
+pnpm db:migrate && pnpm db:seed
+pnpm dev                     # API :8787, web :5173
 ```
 
-## Wallet
+Wallet sign-in is real in every build: the Mini App SDK inside Nimiq Pay, Nimiq Hub Connect everywhere else
+(`VITE_NIMIQ_HUB_URL` — `https://hub.nimiq-testnet.com` for testnet). The server issues a one-time nonce, the
+wallet signs it, the API verifies the signature.
 
-There is exactly one way in, and it is always a real Nimiq wallet:
-
-- **Inside Nimiq Pay** the injected Mini App provider signs the challenge.
-- **In any other browser** the Connect button opens Nimiq Hub Connect (`VITE_NIMIQ_HUB_URL` points at
-  `https://hub.nimiq-testnet.com` for testnet).
-
-The server issues a single-use nonce, the wallet signs it, and the API verifies the signature against the
-address. No simulated signer exists in any build.
-
-## Scoring
-
-- 1000 points per correct answer.
-- Up to 500 bonus points, decaying linearly over the first 15 seconds of each question.
-- Wrong answers score zero. Maximum run: 7500.
-- Ties break on total score, then total duration, then completion time, then attempt id — fully deterministic.
-- Answers faster than 350 ms are flagged for review.
-
-Questions are delivered one at a time, timings come from the server clock, and the correct option is never
-sent to the browser before an answer is submitted.
-
-## Prizes and settlement
-
-Default ladder per day: 30 / 15 / 10 NIM for ranks 1–3 and 5 NIM for ranks 4–10 (90 NIM pool). Sponsors can
-top up a day's pool by sending NIM to `PRIZE_POOL_ADDRESS` from their own wallet.
-
-**Prizes are paid by hand.** The server holds no private key and signs nothing — settlement only decides who
-won what, and you transfer the NIM from the prize pool wallet yourself, then record it:
+### Check it
 
 ```bash
-pnpm settle -- 2026-01-31 --dry-run   # preview allocation
-pnpm settle -- 2026-01-31             # idempotent: records who is owed what
-pnpm winners -- --date 2026-01-31     # the list to pay (add --csv to export)
+pnpm lint && pnpm typecheck && pnpm build
+createdb nimoto_test
+TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/nimoto_test pnpm test
 ```
 
-Each winner's recipient address is their own wallet, so you can send from the Nimiq Wallet app. Mark a prize
-paid once the transfer is confirmed:
+### Deploy it
+
+[`render.yaml`](./render.yaml) is a Render Blueprint: the API, the static web app, a 23:50 UTC cron that
+pre-creates tomorrow's challenge and a 00:10 UTC cron that settles the day just closed. The database is Neon —
+paste the **pooled** connection string as `DATABASE_URL` on `nimoto-api` (the crons pull it from there) and
+keep `DATABASE_SSL=true`. Seed the question bank once:
+
+```bash
+DATABASE_URL=... DATABASE_SSL=true pnpm db:seed
+```
+
+### Pay the winners
+
+The server holds no private key and signs nothing. Settlement only records who is owed what:
+
+```bash
+pnpm settle -- 2026-01-31           # idempotent
+pnpm winners -- --date 2026-01-31   # who to pay; add --csv to export
+```
+
+Send each prize from the prize-pool wallet in the ordinary Nimiq Wallet, then mark it paid:
 
 ```bash
 curl -X POST -H "authorization: Bearer $ADMIN_API_TOKEN" \
@@ -89,67 +120,21 @@ curl -X POST -H "authorization: Bearer $ADMIN_API_TOKEN" \
   https://<api>/api/admin/payouts/<payoutId>/paid
 ```
 
-Settlement refuses to run twice and validates every recipient, so the winner list is stable and re-runnable.
+`PRIZE_POOL_ADDRESS` is a plain public NQ address; testnet NIM comes from
+`curl -X POST -d "address=NQ..." https://faucet.pos.nimiq-testnet.com/tapit`.
 
-## Testing
+### Share cards and the mascot
 
-```bash
-pnpm lint
-pnpm typecheck
-pnpm test        # shared unit + API integration + web flow tests
-pnpm build
-```
+Result cards are 1200×675 PNGs drawn on a canvas and shared through the native share sheet, a download, or a
+prefilled X post. `VITE_SOCIAL_HANDLE` sets the handle those posts tag (default `@nimoto`).
 
-API integration tests need an empty database:
+The mascot is the "glasses" character from [page-mascot](https://koboyo.com/page-mascot); her two sprite
+sheets live in `public/mascots`. She follows the cursor and blinks when you poke her.
 
-```bash
-createdb nimoto_test
-TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/nimoto_test pnpm test:node
-```
+## Security
 
-## Deployment
-
-[`render.yaml`](./render.yaml) is a Render Blueprint: API web service, static frontend, and two cron jobs
-(pre-create tomorrow's challenges at 23:50 UTC, settle the closed day at 00:10 UTC). The API runs
-`pnpm db:migrate` as its pre-deploy step.
-
-The database is **Neon**, not Render Postgres. Create the project, then set on every service:
-
-```bash
-DATABASE_URL=postgresql://user:pass@ep-xxx-pooler.<region>.aws.neon.tech/nimoto?sslmode=require
-DATABASE_SSL=true
-```
-
-Use the **pooled** (`-pooler`) host — the API keeps a connection pool and Neon's direct endpoint caps
-connections much lower. Seed the question bank once against Neon:
-
-```bash
-DATABASE_URL=... DATABASE_SSL=true pnpm db:seed
-```
-
-### Prize pool wallet
-
-`PRIZE_POOL_ADDRESS` is a plain public NQ address — the one sponsors top up and the one you pay winners from,
-using the ordinary Nimiq Wallet. It is committed in the blueprint because it is not a secret, and no private
-key exists anywhere in the app, the env, or the repo.
-
-Testnet NIM comes from the faucet:
-
-```bash
-curl -X POST -d "address=NQ.. .... ...." https://faucet.pos.nimiq-testnet.com/tapit
-```
-
-## Share cards
-
-After a run the results screen renders a 1200×675 PNG on a canvas — score, rank, top-N%, streak, NIM won and
-the share of the day's pool — and offers the native share sheet (falling back to a download) plus a prefilled
-X post. Set `VITE_SOCIAL_HANDLE` to the handle those posts should tag; it defaults to `@nimoto`.
-
-## Security notes
-
-See [SECURITY.md](./SECURITY.md). In short: wallet challenge–response with single-use nonces, HTTP-only
-session cookies (bearer tokens inside the Mini App webview), server-authoritative scoring, rate limits, and
-an admin surface that is entirely separate from wallet sessions.
+See [SECURITY.md](./SECURITY.md): single-use wallet nonces, HTTP-only session cookies, server-authoritative
+scoring, rate limits, and an admin token that is separate from player sessions.
 
 ## License
 

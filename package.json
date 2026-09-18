@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Nimoto \u2014 a daily skill competition Mini App for Nimiq Pay",
+  "description": "Nimoto — a daily skill competition Mini App for Nimiq Pay",
   "license": "MIT",
   "packageManager": "pnpm@9.15.9",
   "engines": {
@@ -36,6 +36,7 @@
     "@nimiq/mini-app-sdk": "0.1.0",
     "drizzle-orm": "0.36.4",
     "hono": "4.6.13",
+    "page-mascot": "0.1.0",
     "postgres": "3.4.5",
     "react": "18.3.1",
     "react-dom": "18.3.1",
