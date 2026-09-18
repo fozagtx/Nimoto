@@ -97,7 +97,7 @@ export function PlayScreen({
         tone="error"
         title="This run cannot continue"
         description={error.message}
-        action={<Button onClick={() => navigate({ name: 'home' })}>Back home</Button>}
+        action={<Button nested onClick={() => navigate({ name: 'home' })}>Back home</Button>}
       />
     );
   }
@@ -116,7 +116,7 @@ export function PlayScreen({
     <div className="space-y-4">
       <header className="space-y-2">
         <div className="flex items-center justify-between text-sm font-bold text-muted">
-          <span>
+          <span className="num">
             Question {progress} of {questionCount}
           </span>
           <span className="rounded-lg bg-[#f2f2f2] px-2 py-1 text-xs uppercase tracking-cta">
@@ -132,7 +132,7 @@ export function PlayScreen({
           aria-label="Run progress"
         >
           <div
-            className="h-full rounded-full bg-owl transition-all duration-300"
+            className="h-full rounded-full bg-owl transition-[width] duration-[var(--duration-medium)] ease-[var(--ease-smooth-out)]"
             style={{ width: `${(progress / questionCount) * 100}%` }}
           />
         </div>
@@ -172,7 +172,7 @@ export function PlayScreen({
                 aria-pressed={isSelected}
                 className={`flex min-h-[56px] w-full items-center gap-3 rounded-xl border-2 px-4 py-3 text-left font-bold text-navy shadow-card transition-transform duration-100 active:translate-y-[2px] disabled:cursor-default ${state}`}
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 border-current text-xs font-black">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border-2 border-current text-xs font-black">
                   {OPTION_LABELS[index]}
                 </span>
                 <span className="flex-1">{option.text}</span>
@@ -190,10 +190,10 @@ export function PlayScreen({
           className={`surface p-4 ${feedback.isCorrect ? 'border-owl bg-owl-soft' : 'border-cardinal bg-cardinal-soft'}`}
         >
           <p className="font-display text-base font-extrabold text-navy">
-            {feedback.isCorrect ? `Correct — +${feedback.pointsEarned} points` : 'Not quite — 0 points'}
+            {feedback.isCorrect ? <>Correct — <span className="num">+{feedback.pointsEarned}</span> points</> : 'Not quite — 0 points'}
           </p>
           {feedback.explanation ? <p className="mt-1 text-sm text-ink">{feedback.explanation}</p> : null}
-          <Button full className="mt-4" onClick={advance}>
+          <Button nested full className="mt-4" onClick={advance}>
             {stagedNext.current ? 'Next question' : 'See results'}
           </Button>
         </section>

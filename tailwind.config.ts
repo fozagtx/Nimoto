@@ -20,7 +20,11 @@ export default {
         beetle: '#ce82ff',
         hairline: '#e5e5e5',
       },
+      // Concentric corners: a 20px card with ~22px of inset (padding + border)
+      // wants near-square children by the formula; 8px/10px is the by-eye tune.
       borderRadius: {
+        lg: '8px',
+        nested: '10px',
         xl: '16px',
         '2xl': '20px',
       },

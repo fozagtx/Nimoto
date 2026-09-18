@@ -28,7 +28,7 @@ export function InviteScreen({ navigate }: { navigate: (route: Route) => void })
       <StatusMessage
         title="Connect your wallet to invite friends"
         description="Your invite link is tied to your Nimiq address."
-        action={<Button onClick={() => navigate({ name: 'home' })}>Back home</Button>}
+        action={<Button nested onClick={() => navigate({ name: 'home' })}>Back home</Button>}
       />
     );
   }
@@ -45,11 +45,12 @@ export function InviteScreen({ navigate }: { navigate: (route: Route) => void })
           A friend counts once they finish their first ranked run. You earn XP and a badge — never NIM for
           inviting.
         </p>
-        <p className="mt-4 break-all rounded-xl border-2 border-hairline bg-[#fafafa] p-3 font-mono text-sm">
+        <p className="mt-4 break-all rounded-lg border-2 border-hairline bg-[#fafafa] p-3 font-mono text-sm">
           {summary.link}
         </p>
         <div className="mt-4 grid gap-3">
           <Button
+            nested
             full
             onClick={async () => {
               void api.track('share_clicked', { surface: 'invite' });
@@ -89,7 +90,7 @@ function Cell({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border-2 border-hairline p-3 text-center">
       <dt className="text-[11px] font-bold uppercase tracking-cta text-muted">{label}</dt>
-      <dd className="font-display text-xl font-black text-navy">{value}</dd>
+      <dd className="num font-display text-xl font-black text-navy">{value}</dd>
     </div>
   );
 }

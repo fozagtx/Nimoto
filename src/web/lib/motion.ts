@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 function cssMs(name: string, fallback: number): number {
   if (typeof window === 'undefined') return fallback;
@@ -39,16 +39,27 @@ export function useTextSwap(label: string): {
   return { ref, label: shown };
 }
 
-/** Plays the staggered entrance once the element is mounted. */
-export function useTextsReveal<T extends HTMLElement>(): React.RefObject<T> {
-  const ref = useRef<T>(null);
-  useEffect(() => {
-    const element = ref.current;
+/**
+ * Plays the staggered entrance when the element attaches, however late that is
+ * relative to the owning component's first render (e.g. after a loading state).
+ */
+export function useTextsReveal<T extends HTMLElement>(): React.RefCallback<T> {
+  const frame = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (frame.current !== null) window.cancelAnimationFrame(frame.current);
+    },
+    [],
+  );
+  return useCallback((element: T | null) => {
+    if (frame.current !== null) window.cancelAnimationFrame(frame.current);
+    frame.current = null;
     if (!element) return;
-    const frame = window.requestAnimationFrame(() => element.classList.add('is-shown'));
-    return () => window.cancelAnimationFrame(frame);
+    frame.current = window.requestAnimationFrame(() => {
+      frame.current = null;
+      element.classList.add('is-shown');
+    });
   }, []);
-  return ref;
 }
 
 /**

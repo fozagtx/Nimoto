@@ -48,15 +48,15 @@ export function ResultsPanel({
 
   return (
     <div className="space-y-4">
-      <section className="surface p-6 text-center">
+      <section className="surface grain p-6 text-center">
         <div className="flex justify-center">
           <Mascot mood={result.correctCount >= 3 ? 'cheer' : 'thinking'} size={96} />
         </div>
         <p className="mt-2 font-display text-xs font-extrabold uppercase tracking-cta text-owl">
           {ranked ? 'Ranked run complete' : 'Practice run complete'}
         </p>
-        <p className="font-display text-5xl font-black text-navy">{formatNumber(result.totalScore)}</p>
-        <p className="mt-1 text-sm text-muted">
+        <p className="num font-display text-5xl font-black tracking-tight text-navy">{formatNumber(result.totalScore)}</p>
+        <p className="num mt-1 text-sm text-muted">
           {result.correctCount}/{result.questionCount} correct in {formatDuration(result.totalDurationMs)}
         </p>
 
@@ -67,13 +67,13 @@ export function ResultsPanel({
             <Cell label="Streak" value={`${result.currentStreak} 🔥`} />
           </dl>
         ) : (
-          <p className="mt-4 rounded-xl border-2 border-hairline p-3 text-sm text-muted">
+          <p className="mt-4 rounded-lg border-2 border-hairline p-3 text-sm text-muted">
             Practice runs never affect your rank, streak or prizes.
           </p>
         )}
 
         {ranked && result.prizeNim ? (
-          <p className="mt-4 rounded-xl border-2 border-owl bg-owl-soft p-3 font-bold text-navy">
+          <p className="mt-4 rounded-lg border-2 border-owl bg-owl-soft p-3 font-bold text-navy">
             On track for {result.prizeNim} NIM if this rank holds at 00:00 UTC. Prizes are sent by hand — we
             reach out to winners at their wallet address.
           </p>
@@ -88,7 +88,7 @@ export function ResultsPanel({
           ref={canvasRef}
           role="img"
           aria-label={caption}
-          className="w-full rounded-xl border-2 border-hairline"
+          className="w-full rounded-lg"
         />
       </section>
 
@@ -143,9 +143,9 @@ export function ResultsPanel({
 
 function Cell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border-2 border-hairline p-3">
+    <div className="rounded-lg border-2 border-hairline bg-white p-3">
       <dt className="text-[11px] font-bold uppercase tracking-cta text-muted">{label}</dt>
-      <dd className="font-display text-lg font-black text-navy">{value}</dd>
+      <dd className="num font-display text-lg font-black text-navy">{value}</dd>
     </div>
   );
 }
