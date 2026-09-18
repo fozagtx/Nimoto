@@ -6,7 +6,7 @@ import type { AppBindings } from '../context.js';
 import { ApiError } from '../lib/errors.js';
 import { requireAdmin } from '../middleware.js';
 import { ensureDailyChallenge } from '../services/challenges.js';
-import { planSettlement, runPayouts, settleChallenge } from '../services/settlement.js';
+import { listWinners, markPayoutPaid, planSettlement, settleChallenge } from '../services/settlement.js';
 
 function parseDate(value: string | undefined): ChallengeDate {
   if (!value || !isChallengeDate(value)) {
@@ -41,8 +41,15 @@ export function adminRoutes() {
     return c.json({ dryRun: false, created, plan });
   });
 
-  app.post('/payouts/run', async (c) => {
-    return c.json(await runPayouts(c.get('ctx'), 'admin-api'));
+  app.get('/settlements/:date/winners', async (c) => {
+    const date = parseDate(c.req.param('date'));
+    return c.json({ date, winners: await listWinners(c.get('ctx'), date) });
+  });
+
+  // Prizes are transferred by hand from the prize pool wallet; this records it.
+  app.post('/payouts/:id/paid', async (c) => {
+    const body = (await c.req.json().catch(() => ({}))) as { transactionHash?: string };
+    return c.json(await markPayoutPaid(c.get('ctx'), c.req.param('id'), 'admin-api', body.transactionHash));
   });
 
   app.get('/payouts', async (c) => {

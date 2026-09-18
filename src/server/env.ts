@@ -26,11 +26,11 @@ export const envSchema = z.object({
   MAX_DAILY_PAYOUT_NIM: z.string().default('200'),
   /** Hard ceiling on a single payout, in NIM. */
   MAX_SINGLE_PAYOUT_NIM: z.string().default('100'),
-  /** Treasury is optional: without it the API runs in "no payout" mode. */
-  TREASURY_PRIVATE_KEY: z.string().optional(),
-  TREASURY_ADDRESS: z.string().optional(),
-  NIMIQ_NETWORK: z.enum(['main-albatross', 'test-albatross']).default('test-albatross'),
-  NIMIQ_RPC_URL: z.string().url().optional(),
+  /**
+   * Public NQ address that receives sponsorships and pays the daily prizes.
+   * Prizes are transferred by hand, so no private key ever reaches the server.
+   */
+  PRIZE_POOL_ADDRESS: z.string().optional(),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
 });

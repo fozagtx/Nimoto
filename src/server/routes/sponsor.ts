@@ -17,7 +17,7 @@ import { requireUser } from '../middleware.js';
 /**
  * Sponsorship is pull-only: the API records an intent, the sponsor signs the
  * transfer in their own wallet, and the confirmed hash is recorded afterwards.
- * The treasury never signs anything here.
+ * The server never signs anything here — it holds no key.
  */
 export function sponsorRoutes() {
   const app = new Hono<AppBindings>();
@@ -25,8 +25,8 @@ export function sponsorRoutes() {
   app.post('/sponsor/intents', requireUser, async (c) => {
     const ctx = c.get('ctx');
     const user = c.get('user')!;
-    if (!ctx.treasury.address) {
-      throw ApiError.badRequest('treasury_disabled', 'Sponsorship is unavailable right now');
+    if (!ctx.prizePoolAddress) {
+      throw ApiError.badRequest('sponsorship_disabled', 'Sponsorship is unavailable right now');
     }
     const body = sponsorIntentRequestSchema.parse(await c.req.json());
     const amountLuna = nimToLuna(body.amountNim);
@@ -41,7 +41,7 @@ export function sponsorRoutes() {
 
     return c.json<SponsorIntentResponse>({
       contributionId: contribution.id,
-      recipient: ctx.treasury.address,
+      recipient: ctx.prizePoolAddress,
       amountLuna: amountLuna.toString(),
       amountNim: lunaToNim(amountLuna),
       challengeDate,

@@ -46,7 +46,7 @@ export function createApp(ctx: AppContext) {
     return c.json({
       status: 'ok',
       serverTime: new Date().toISOString(),
-      treasury: ctx.treasury.enabled ? 'configured' : 'disabled',
+      prizePool: ctx.prizePoolAddress ? 'configured' : 'unset',
     });
   });
 

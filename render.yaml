@@ -17,8 +17,6 @@ envVarGroups:
         value: "22"
       - key: DATABASE_SSL
         value: "true"
-      - key: NIMIQ_NETWORK
-        value: test-albatross
 
 services:
   - type: web
@@ -51,14 +49,10 @@ services:
           type: web
           name: nimoto-web
           envVarKey: RENDER_EXTERNAL_URL
-      # Leave all three empty to keep payouts off: settlement still records who
-      # won what, it just never signs a transaction. See README → Treasury wallet.
-      - key: NIMIQ_RPC_URL
-        sync: false
-      - key: TREASURY_PRIVATE_KEY
-        sync: false
-      - key: TREASURY_ADDRESS
-        sync: false
+      # Public address sponsors send NIM to, and the wallet you pay prizes from
+      # by hand. The server never holds a key.
+      - key: PRIZE_POOL_ADDRESS
+        value: NQ63 6JD3 2CNK XJ8V 8RPS UXV1 CVG2 AXB9 491H
 
   - type: web
     name: nimoto-web
@@ -113,7 +107,8 @@ services:
           name: nimoto-api
           envVarKey: ADMIN_API_TOKEN
 
-  # Settles the day that just closed, then sends whatever the treasury can pay.
+  # Settles the day that just closed: ranks finishers and records who is owed
+  # what. Prizes are transferred by hand — see `pnpm winners`.
   - type: cron
     name: nimoto-settlement
     runtime: node
@@ -122,7 +117,7 @@ services:
     branch: main
     schedule: "10 0 * * *"
     buildCommand: corepack enable && pnpm install --frozen-lockfile
-    startCommand: pnpm settle && pnpm payouts:run -- --limit 50
+    startCommand: pnpm settle
     envVars:
       - fromGroup: nimoto-runtime
       - key: DATABASE_URL
@@ -135,18 +130,3 @@ services:
           type: web
           name: nimoto-api
           envVarKey: ADMIN_API_TOKEN
-      - key: NIMIQ_RPC_URL
-        fromService:
-          type: web
-          name: nimoto-api
-          envVarKey: NIMIQ_RPC_URL
-      - key: TREASURY_PRIVATE_KEY
-        fromService:
-          type: web
-          name: nimoto-api
-          envVarKey: TREASURY_PRIVATE_KEY
-      - key: TREASURY_ADDRESS
-        fromService:
-          type: web
-          name: nimoto-api
-          envVarKey: TREASURY_ADDRESS
