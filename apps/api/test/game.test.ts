@@ -99,6 +99,47 @@ describe('daily challenge and ranked runs', () => {
     expect(duplicate.status).toBe(409);
   });
 
+  it('does not restart the speed clock when a ranked run is reloaded', async () => {
+    const user = await signIn(harness, createWallet(28));
+    const { body } = await startRanked(user);
+    const servedAt = new Date(body.currentQuestion.serverTime).getTime();
+
+    const reloaded = (await (
+      await harness.request(`/api/attempts/${body.attemptId}`, { headers: authHeaders(user) })
+    ).json()) as any;
+    expect(new Date(reloaded.currentQuestion.serverTime).getTime()).toBe(servedAt);
+
+    const [row] = await harness.ctx.db.select().from(attempts).where(eq(attempts.id, body.attemptId));
+    expect(row?.questionServedAt.getTime()).toBe(servedAt);
+  });
+
+  it('never previews the ranked questions in practice', async () => {
+    const user = await signIn(harness, createWallet(29));
+    const practice = await harness.request('/api/attempts', {
+      method: 'POST',
+      headers: authHeaders(user),
+      body: JSON.stringify({ mode: 'practice' }),
+    });
+    const practiceState = (await practice.json()) as any;
+    const ranked = await startRanked(user);
+
+    const practiceIds = new Set<string>();
+    let question = practiceState.currentQuestion;
+    while (question) {
+      practiceIds.add(question.questionId);
+      const option = await correctOptionFor(harness, question.questionId);
+      const res = await harness.request(`/api/attempts/${practiceState.attemptId}/answer`, {
+        method: 'POST',
+        headers: authHeaders(user),
+        body: JSON.stringify({ questionId: question.questionId, selectedOption: option }),
+      });
+      question = ((await res.json()) as any).nextQuestion;
+    }
+
+    expect(practiceIds.size).toBe(SCORING.QUESTIONS_PER_RUN);
+    expect(practiceIds.has(ranked.body.currentQuestion.questionId)).toBe(false);
+  });
+
   it('scores a perfect run within the documented maximum', async () => {
     const user = await signIn(harness, createWallet(15));
     const { result } = await playRankedRun(harness, user);

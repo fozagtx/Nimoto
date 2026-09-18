@@ -22,7 +22,13 @@ import {
 } from '@nimoto/shared';
 import { ApiError } from '../lib/errors.js';
 import { logger } from '../lib/logger.js';
-import { challengeQuestions, questionAtPosition, type DailyChallengeRow, type QuestionRow } from './challenges.js';
+import {
+  challengeQuestions,
+  practiceQuestionAtPosition,
+  questionAtPosition,
+  type DailyChallengeRow,
+  type QuestionRow,
+} from './challenges.js';
 import { rankOfAttempt } from './leaderboard.js';
 import { currentVisibleStreak, recordRankedCompletion } from './streaks.js';
 import { qualifyReferral } from './referrals.js';
@@ -51,6 +57,16 @@ export function toQuestionView(question: QuestionRow, position: number, serverTi
     difficulty: question.difficulty,
     serverTime: serverTime.toISOString(),
   };
+}
+
+function questionForAttempt(
+  db: Database,
+  attempt: AttemptRow,
+  position: number,
+): Promise<QuestionRow | undefined> {
+  return attempt.mode === 'practice'
+    ? practiceQuestionAtPosition(db, attempt.id, attempt.dailyChallengeId, position)
+    : questionAtPosition(db, attempt.dailyChallengeId, position);
 }
 
 export async function findActiveAttempt(
@@ -198,11 +214,15 @@ export async function attemptState(
   let currentQuestion: QuestionView | null = null;
   if (attempt.status === 'started') {
     const nextPosition = answers.length + 1;
-    const question = await questionAtPosition(db, attempt.dailyChallengeId, nextPosition);
+    const question = await questionForAttempt(db, attempt, nextPosition);
     if (question) {
-      // Resuming re-serves the question, so the clock restarts fairly.
-      await db.update(attempts).set({ questionServedAt: now }).where(eq(attempts.id, attempt.id));
-      currentQuestion = toQuestionView(question, nextPosition, now);
+      // Ranked keeps the original service time: restarting it would let a
+      // reload buy back the speed bonus. Practice is free to restart.
+      if (attempt.mode === 'practice') {
+        await db.update(attempts).set({ questionServedAt: now }).where(eq(attempts.id, attempt.id));
+        attempt = { ...attempt, questionServedAt: now };
+      }
+      currentQuestion = toQuestionView(question, nextPosition, attempt.questionServedAt);
     }
   }
 
@@ -313,7 +333,7 @@ export async function submitAnswer(db: Database, params: SubmitAnswerParams): Pr
     throw ApiError.conflict('attempt_completed', 'This run is already finished');
   }
 
-  const expected = await questionAtPosition(db, challenge.id, position);
+  const expected = await questionForAttempt(db, attempt, position);
   if (!expected) throw ApiError.internal('challenge_incomplete', 'The daily challenge is missing a question');
   if (expected.id !== params.questionId) {
     throw ApiError.conflict('unexpected_question', 'That is not the question you are on');
@@ -374,7 +394,7 @@ export async function submitAnswer(db: Database, params: SubmitAnswerParams): Pr
       referralCode: params.referralCode,
     });
   } else {
-    const upcoming = await questionAtPosition(db, challenge.id, position + 1);
+    const upcoming = await questionForAttempt(db, attempt, position + 1);
     if (upcoming) {
       await db.update(attempts).set({ questionServedAt: now }).where(eq(attempts.id, attempt.id));
       nextQuestion = toQuestionView(upcoming, position + 1, now);

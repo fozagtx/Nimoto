@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, notInArray, sql } from 'drizzle-orm';
 import type { Database } from '@nimoto/db';
 import { dailyChallengeQuestions, dailyChallenges, questions } from '@nimoto/db';
 import {
@@ -98,6 +98,32 @@ export async function challengeQuestions(db: Database, challengeId: string): Pro
     .where(eq(dailyChallengeQuestions.dailyChallengeId, challengeId))
     .orderBy(asc(dailyChallengeQuestions.position));
   return rows.map((row) => row.question);
+}
+
+/**
+ * Practice draws from the rest of the bank so training never previews the
+ * ranked questions. The order is a deterministic function of the attempt, so a
+ * resumed practice run keeps serving the same questions.
+ */
+export async function practiceQuestionAtPosition(
+  db: Database,
+  attemptId: string,
+  challengeId: string,
+  position: number,
+): Promise<QuestionRow | undefined> {
+  const reserved = db
+    .select({ id: dailyChallengeQuestions.questionId })
+    .from(dailyChallengeQuestions)
+    .where(eq(dailyChallengeQuestions.dailyChallengeId, challengeId));
+
+  const rows = await db
+    .select()
+    .from(questions)
+    .where(and(eq(questions.active, true), notInArray(questions.id, reserved)))
+    .orderBy(sql`md5(${questions.id}::text || ${attemptId})`)
+    .limit(SCORING.QUESTIONS_PER_RUN);
+
+  return rows[position - 1];
 }
 
 export async function questionAtPosition(
