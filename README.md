@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/mascots/glasses-directions.webp" width="160" alt="The Nimoto mascot">
+  <img src="./public/icon-512.png" width="128" alt="Nimoto app icon">
 </p>
 
 <h1 align="center">Nimoto</h1>
@@ -11,6 +11,13 @@ new five-question run goes live. You get one ranked shot at it. Answer fast and 
 leaderboard, and the top ten are paid real NIM — straight to the wallet you played with.
 
 No account. No password. No token to buy. Your Nimiq wallet *is* your profile.
+
+<p align="center">
+  <img src="./docs/screenshots/home.png" width="180" alt="Home: today's challenge, prize pool, streak">
+  <img src="./docs/screenshots/leaderboard.png" width="180" alt="Leaderboard for today">
+  <img src="./docs/screenshots/invite.png" width="180" alt="Invite a friend">
+  <img src="./docs/screenshots/play.png" width="180" alt="Connect your Nimiq wallet to play">
+</p>
 
 ## How a day on Nimoto goes
 
