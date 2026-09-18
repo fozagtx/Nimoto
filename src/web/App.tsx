@@ -8,6 +8,7 @@ import { PrivacyScreen } from './screens/PrivacyScreen.js';
 import { StatusMessage } from './components/StatusMessage.js';
 import { Button } from './components/Button.js';
 import { ConnectWallet } from './components/ConnectWallet.js';
+import { GlassTabs } from './components/GlassTabs.js';
 import { SessionProvider, useSession } from './state/session.js';
 import { api } from './lib/api.js';
 
@@ -37,6 +38,13 @@ function Shell() {
   }, []);
 
   const needsAuth = route.name === 'play' && status !== 'authenticated';
+  const navTabs = [
+    { key: 'home', label: 'Play' },
+    { key: 'leaderboard', label: 'Ranks' },
+    { key: 'invite', label: 'Invite' },
+  ] as const;
+  const navKey = route.name === 'leaderboard' || route.name === 'invite' ? route.name : 'home';
+  const showNav = route.name !== 'play' && status !== 'loading';
 
   return (
     <div className="mx-auto flex min-h-full w-full max-w-md flex-col gap-4 px-4 pb-10 pt-5">
@@ -62,6 +70,15 @@ function Shell() {
         <p role="alert" className="rounded-xl border-2 border-fox bg-[#fff4e0] p-3 text-sm font-bold text-navy">
           You are offline. Your run will resume when the connection returns.
         </p>
+      ) : null}
+
+      {showNav ? (
+        <GlassTabs
+          tabs={navTabs}
+          value={navKey}
+          label="Sections"
+          onChange={(key) => navigate({ name: key })}
+        />
       ) : null}
 
       <main id="main" className="flex-1">
