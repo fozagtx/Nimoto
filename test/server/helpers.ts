@@ -1,6 +1,7 @@
 import { KeyPair, PrivateKey } from '@nimiq/core';
 import { eq, sql } from 'drizzle-orm';
 import { SEED_QUESTIONS, questions, runMigrations } from '@/db';
+import type { AttemptResultResponse } from '@/shared';
 import { createApp } from '@/server/app.js';
 import { createAppContext, type AppContext } from '@/server/context.js';
 import { loadEnv } from '@/server/env.js';
@@ -122,7 +123,7 @@ export async function playRankedRun(
   harness: TestHarness,
   user: AuthedUser,
   options: { correct?: boolean } = {},
-): Promise<{ attemptId: string; result: { totalScore: number; rank: number | null } }> {
+): Promise<{ attemptId: string; result: AttemptResultResponse }> {
   const startRes = await harness.request('/api/attempts', {
     method: 'POST',
     headers: authHeaders(user),
@@ -135,7 +136,7 @@ export async function playRankedRun(
   };
 
   let question = state.currentQuestion;
-  let result: { totalScore: number; rank: number | null } | null = null;
+  let result: AttemptResultResponse | null = null;
 
   while (question) {
     const correctOption = await correctOptionFor(harness, question.questionId);
@@ -148,7 +149,7 @@ export async function playRankedRun(
     if (answerRes.status !== 200) throw new Error(`answer failed: ${await answerRes.text()}`);
     const body = (await answerRes.json()) as {
       nextQuestion: { questionId: string } | null;
-      result: { totalScore: number; rank: number | null } | null;
+      result: AttemptResultResponse | null;
     };
     question = body.nextQuestion;
     result = body.result;

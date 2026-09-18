@@ -62,6 +62,7 @@ const RESULT: AttemptResultResponse = {
   currentStreak: 4,
   prizeNim: '10',
   nextChallengePoolNim: '90',
+  referralUrl: 'http://localhost/?ref=ABC123',
   shareText: 'I scored 6200 on Nimoto today.',
 };
 

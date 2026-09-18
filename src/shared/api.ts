@@ -184,6 +184,8 @@ export interface AttemptResultResponse {
   currentStreak: number;
   prizeNim: string | null;
   nextChallengePoolNim: string;
+  /** Absolute invite link for this player, carrying their referral code. */
+  referralUrl: string;
   shareText: string;
 }
 
