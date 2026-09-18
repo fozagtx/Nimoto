@@ -6,6 +6,7 @@ export default defineConfig({
   dialect: 'postgresql',
   dbCredentials: {
     url: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/nimoto',
+    ssl: process.env.DATABASE_SSL === 'true' ? 'require' : undefined,
   },
   strict: true,
 });

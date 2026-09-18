@@ -1,0 +1,129 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# The database is Neon, not a Render Postgres instance: set DATABASE_URL in the
+# Render dashboard to the Neon *pooled* connection string, e.g.
+#   postgresql://user:pass@ep-xxx-pooler.eu-central-1.aws.neon.tech/nimoto?sslmode=require
+# Neon always requires TLS, hence DATABASE_SSL=true.
+
+services:
+  - type: web
+    name: nimoto-api
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    preDeployCommand: pnpm db:migrate
+    startCommand: pnpm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Neon pooled connection string
+      - key: DATABASE_SSL
+        value: "true"
+      - key: ADMIN_API_TOKEN
+        generateValue: true
+      - key: CORS_ORIGINS
+        fromService:
+          type: web
+          name: nimoto-web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: PUBLIC_WEB_URL
+        fromService:
+          type: web
+          name: nimoto-web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: NIMIQ_NETWORK
+        value: test-albatross
+      # Payouts stay disabled until a funded treasury key is set by hand.
+      - key: TREASURY_PRIVATE_KEY
+        sync: false
+      - key: TREASURY_ADDRESS
+        sync: false
+
+  - type: web
+    name: nimoto-web
+    runtime: static
+    branch: main
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    staticPublishPath: ./dist/web
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: nimoto-api
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+
+  # Keeps the next few UTC days pre-created so no player races the first write.
+  - type: cron
+    name: nimoto-daily-challenge
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "50 23 * * *"
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: pnpm challenge:create -- --days 3
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
+      - key: ADMIN_API_TOKEN
+        fromService:
+          type: web
+          name: nimoto-api
+          envVarKey: ADMIN_API_TOKEN
+
+  # Settles the day that just closed, then sends whatever the treasury can pay.
+  - type: cron
+    name: nimoto-settlement
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    schedule: "10 0 * * *"
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: pnpm settle && pnpm payouts:run -- --limit 50
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
+      - key: ADMIN_API_TOKEN
+        fromService:
+          type: web
+          name: nimoto-api
+          envVarKey: ADMIN_API_TOKEN
+      - key: NIMIQ_NETWORK
+        value: test-albatross
+      - key: TREASURY_PRIVATE_KEY
+        sync: false
+      - key: TREASURY_ADDRESS
+        sync: false

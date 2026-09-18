@@ -9,7 +9,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const { db, close } = createDatabase({ url, max: 1 });
+  const { db, close } = createDatabase({ url, max: 1, ssl: process.env.DATABASE_SSL === 'true' });
   try {
     const inserted = await db
       .insert(questions)

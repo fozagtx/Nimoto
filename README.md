@@ -97,6 +97,29 @@ createdb nimoto_test
 TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/nimoto_test pnpm test:node
 ```
 
+## Deployment
+
+[`render.yaml`](./render.yaml) is a Render Blueprint: API web service, static frontend, and two cron jobs
+(pre-create tomorrow's challenges at 23:50 UTC, settle + pay out at 00:10 UTC). The API runs `pnpm db:migrate`
+as its pre-deploy step.
+
+The database is **Neon**, not Render Postgres. Create the project, then set on every service:
+
+```bash
+DATABASE_URL=postgresql://user:pass@ep-xxx-pooler.<region>.aws.neon.tech/nimoto?sslmode=require
+DATABASE_SSL=true
+```
+
+Use the **pooled** (`-pooler`) host — the API keeps a connection pool and Neon's direct endpoint caps
+connections much lower. Seed the question bank once against Neon:
+
+```bash
+DATABASE_URL=... DATABASE_SSL=true pnpm db:seed
+```
+
+`TREASURY_PRIVATE_KEY` / `TREASURY_ADDRESS` are left unset in the blueprint on purpose: until you fill them in
+the Render dashboard, settlement records allocations and sends nothing.
+
 ## Security notes
 
 See [SECURITY.md](./SECURITY.md). In short: wallet challenge–response with single-use nonces, HTTP-only

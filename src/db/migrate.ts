@@ -6,8 +6,8 @@ import postgres from 'postgres';
 
 const migrationsFolder = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'migrations');
 
-export async function runMigrations(url: string): Promise<void> {
-  const sql = postgres(url, { max: 1, onnotice: () => {} });
+export async function runMigrations(url: string, ssl = false): Promise<void> {
+  const sql = postgres(url, { max: 1, ssl: ssl ? 'require' : undefined, onnotice: () => {} });
   try {
     await migrate(drizzle(sql), { migrationsFolder });
   } finally {
@@ -23,7 +23,7 @@ if (isEntrypoint) {
     console.error('DATABASE_URL is required to run migrations');
     process.exit(1);
   }
-  runMigrations(url)
+  runMigrations(url, process.env.DATABASE_SSL === 'true')
     .then(() => {
       console.log('migrations applied');
       process.exit(0);
