@@ -1,0 +1,32 @@
+{
+  "name": "@nimoto/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "challenge:create": "tsx src/scripts/create-challenge.ts",
+    "settle": "tsx src/scripts/settle.ts",
+    "payouts:run": "tsx src/scripts/run-payouts.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "1.13.7",
+    "@nimoto/db": "workspace:*",
+    "@nimoto/shared": "workspace:*",
+    "@nimiq/core": "2.22.0",
+    "drizzle-orm": "0.36.4",
+    "hono": "4.6.13",
+    "postgres": "3.4.5",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "vitest": "2.1.8"
+  }
+}

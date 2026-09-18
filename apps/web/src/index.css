@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-white font-body text-ink antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-4 ring-macaw/60 ring-offset-2 ring-offset-white;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .surface {
+    @apply rounded-2xl border-2 border-hairline bg-white shadow-card;
+  }
+
+  .stat-chip {
+    @apply inline-flex min-h-[44px] items-center gap-2 rounded-xl border-2 border-hairline px-3 py-2 text-sm font-extrabold;
+  }
+}

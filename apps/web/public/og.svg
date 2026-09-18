@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#ffffff" />
+  <rect x="24" y="24" width="1152" height="582" rx="32" fill="#d7ffb8" />
+  <path d="M700 120 L580 330 h80 l-30 160 L790 280 h-80 l40 -160 Z" fill="#ffc800" stroke="#ff9600" stroke-width="10" stroke-linejoin="round" />
+  <text x="96" y="280" font-family="Nunito, Arial, sans-serif" font-size="96" font-weight="900" fill="#042c60">NIMOTO</text>
+  <text x="96" y="350" font-family="Nunito, Arial, sans-serif" font-size="40" font-weight="700" fill="#3c3c3c">Daily Brain Sprint on Nimiq Pay</text>
+  <text x="96" y="430" font-family="Nunito, Arial, sans-serif" font-size="34" font-weight="700" fill="#58a700">5 questions · one ranked run a day · real NIM prizes</text>
+</svg>
