@@ -26,7 +26,7 @@ services:
     region: oregon
     branch: main
     buildCommand: corepack enable && pnpm install --frozen-lockfile
-    preDeployCommand: pnpm db:migrate
+    preDeployCommand: pnpm db:migrate && pnpm db:seed
     startCommand: pnpm start
     healthCheckPath: /health
     autoDeploy: true
