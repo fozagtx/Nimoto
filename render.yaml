@@ -40,7 +40,9 @@ services:
           envVarKey: RENDER_EXTERNAL_URL
       - key: NIMIQ_NETWORK
         value: test-albatross
-      # Payouts stay disabled until a funded treasury key is set by hand.
+      # Payouts stay disabled until all three are set by hand (see README → Treasury wallet).
+      - key: NIMIQ_RPC_URL
+        sync: false
       - key: TREASURY_PRIVATE_KEY
         sync: false
       - key: TREASURY_ADDRESS
@@ -123,6 +125,8 @@ services:
           envVarKey: ADMIN_API_TOKEN
       - key: NIMIQ_NETWORK
         value: test-albatross
+      - key: NIMIQ_RPC_URL
+        sync: false
       - key: TREASURY_PRIVATE_KEY
         sync: false
       - key: TREASURY_ADDRESS

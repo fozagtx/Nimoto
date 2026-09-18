@@ -120,6 +120,35 @@ DATABASE_URL=... DATABASE_SSL=true pnpm db:seed
 `TREASURY_PRIVATE_KEY` / `TREASURY_ADDRESS` are left unset in the blueprint on purpose: until you fill them in
 the Render dashboard, settlement records allocations and sends nothing.
 
+### Treasury wallet
+
+The treasury is an ordinary Nimiq account whose key signs the prize transactions — no contract, no custody by
+Nimiq. The Nimiq Wallet **cannot** export a raw private key (only a Login File / 24 recovery words), and the
+server needs the 32-byte hex, so generate the keypair here instead:
+
+```bash
+pnpm treasury:keygen
+# TREASURY_PRIVATE_KEY=<64 hex chars>
+# TREASURY_ADDRESS=NQ.. .... ....
+```
+
+Paste both into Render (never into the repo), fund the address, and point the server at a node:
+
+```bash
+NIMIQ_NETWORK=test-albatross   NIMIQ_RPC_URL=https://rpc.testnet.nimiqwatch.com
+NIMIQ_NETWORK=main-albatross   NIMIQ_RPC_URL=https://rpc.nimiqwatch.com
+```
+
+Testnet NIM comes from the faucet:
+
+```bash
+curl -X POST -d "address=NQ.. .... ...." https://faucet.pos.nimiq-testnet.com/tapit
+```
+
+Public nodes may reject `sendRawTransaction`; if payouts fail with an RPC error, run your own
+`core-rs-albatross` node and use its URL. Keep only a day or two of prize money on the address —
+`MAX_DAILY_PAYOUT_NIM` and `MAX_SINGLE_PAYOUT_NIM` cap what the worker can send regardless.
+
 ## Security notes
 
 See [SECURITY.md](./SECURITY.md). In short: wallet challenge–response with single-use nonces, HTTP-only
