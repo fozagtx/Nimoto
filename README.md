@@ -97,11 +97,9 @@ TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/nimoto_test pnpm t
 [`render.yaml`](./render.yaml) is a Render Blueprint: the API, the static web app, a 23:50 UTC cron that
 pre-creates tomorrow's challenge and a 00:10 UTC cron that settles the day just closed. The database is Neon —
 paste the **pooled** connection string as `DATABASE_URL` on `nimoto-api` (the crons pull it from there) and
-keep `DATABASE_SSL=true`. Seed the question bank once:
-
-```bash
-DATABASE_URL=... DATABASE_SSL=true pnpm db:seed
-```
+keep `DATABASE_SSL=true`. Every deploy runs `pnpm db:migrate && pnpm db:seed` before the API starts, so the
+question bank is loaded on the first deploy and topped up whenever new questions are added (seeding is
+idempotent: existing prompts are left alone).
 
 ### Pay the winners
 
