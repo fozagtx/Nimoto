@@ -292,6 +292,7 @@ export async function buildResult(
         0n,
       ),
     ),
+    referralUrl,
     shareText: buildShareText({
       totalScore,
       correctCount,

@@ -147,6 +147,9 @@ describe('daily challenge and ranked runs', () => {
     expect(result.totalScore).toBeGreaterThan(SCORING.QUESTIONS_PER_RUN * SCORING.BASE_POINTS);
     expect(result.totalScore).toBeLessThanOrEqual(maxScore);
     expect(result.rank).toBe(1);
+    // Shares must credit the player, so the result carries their invite link.
+    expect(result.referralUrl).toMatch(/\/\?ref=[0-9A-Z]{6}$/);
+    expect(result.shareText).toContain(result.referralUrl);
   });
 
   it('scores zero for a run of wrong answers', async () => {

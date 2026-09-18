@@ -26,7 +26,9 @@ export function ResultsPanel({
   const [shareState, setShareState] = useState<'idle' | 'shared' | 'downloaded' | 'copied' | 'failed'>('idle');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ranked = result.mode === 'ranked';
-  const referralUrl = window.location.origin;
+  // The server-issued invite link carries the player's referral code; the
+  // bare origin would hand out shares that credit nobody.
+  const referralUrl = result.referralUrl || window.location.origin;
   const caption = shareCardCaption(result);
 
   useEffect(() => {
