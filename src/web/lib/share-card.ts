@@ -24,10 +24,15 @@ interface Stat {
 }
 
 export function shareCardStats(result: AttemptResultResponse): Stat[] {
-  const stats: Stat[] = [
-    { label: 'Correct', value: `${result.correctCount}/${result.questionCount}` },
-    { label: 'Streak', value: `${result.currentStreak} day${result.currentStreak === 1 ? '' : 's'}` },
-  ];
+  const stats: Stat[] = [{ label: 'Correct', value: `${result.correctCount}/${result.questionCount}` }];
+  if (result.mode === 'ranked') {
+    // Practice never touches the streak, so its result reports 0 — printing
+    // that next to a live streak on Home reads as a loss the player did not take.
+    stats.push({
+      label: 'Streak',
+      value: `${result.currentStreak} day${result.currentStreak === 1 ? '' : 's'}`,
+    });
+  }
   if (result.rank !== null) {
     stats.unshift({ label: 'Rank', value: `#${result.rank} of ${result.playersToday}` });
   }
