@@ -51,10 +51,9 @@ services:
           type: web
           name: nimoto-web
           envVarKey: RENDER_EXTERNAL_URL
-      # Leave all three empty to keep payouts off: settlement still records who
-      # won what, it just never signs a transaction. See README → Treasury wallet.
-      - key: NIMIQ_RPC_URL
-        sync: false
+      # Leave both empty to keep payouts off: settlement still records who won
+      # what, it just never signs a transaction. See README → Treasury wallet.
+      # (The RPC node is not a secret — it defaults from NIMIQ_NETWORK in code.)
       - key: TREASURY_PRIVATE_KEY
         sync: false
       - key: TREASURY_ADDRESS
@@ -135,11 +134,6 @@ services:
           type: web
           name: nimoto-api
           envVarKey: ADMIN_API_TOKEN
-      - key: NIMIQ_RPC_URL
-        fromService:
-          type: web
-          name: nimoto-api
-          envVarKey: NIMIQ_RPC_URL
       - key: TREASURY_PRIVATE_KEY
         fromService:
           type: web

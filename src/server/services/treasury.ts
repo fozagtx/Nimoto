@@ -21,7 +21,7 @@ class DisabledTreasury implements Treasury {
 
   send(): Promise<{ transactionHash: string }> {
     return Promise.reject(
-      new Error('Treasury is not configured: set TREASURY_PRIVATE_KEY, TREASURY_ADDRESS and NIMIQ_RPC_URL'),
+      new Error('Treasury is not configured: set TREASURY_PRIVATE_KEY and TREASURY_ADDRESS'),
     );
   }
 }
@@ -29,6 +29,12 @@ class DisabledTreasury implements Treasury {
 const NETWORK_IDS: Record<Env['NIMIQ_NETWORK'], number> = {
   'main-albatross': 24,
   'test-albatross': 5,
+};
+
+/** Public read/write Nimiq nodes, used unless NIMIQ_RPC_URL points somewhere else. */
+export const DEFAULT_RPC_URLS: Record<Env['NIMIQ_NETWORK'], string> = {
+  'main-albatross': 'https://rpc.nimiqwatch.com',
+  'test-albatross': 'https://rpc.testnet.nimiqwatch.com',
 };
 
 /**
@@ -89,13 +95,13 @@ class RpcTreasury implements Treasury {
 }
 
 export function createTreasury(env: Env): Treasury {
-  if (!env.TREASURY_PRIVATE_KEY || !env.TREASURY_ADDRESS || !env.NIMIQ_RPC_URL) {
+  if (!env.TREASURY_PRIVATE_KEY || !env.TREASURY_ADDRESS) {
     return new DisabledTreasury();
   }
   return new RpcTreasury(
     env.TREASURY_ADDRESS,
     env.TREASURY_PRIVATE_KEY,
-    env.NIMIQ_RPC_URL,
+    env.NIMIQ_RPC_URL ?? DEFAULT_RPC_URLS[env.NIMIQ_NETWORK],
     NETWORK_IDS[env.NIMIQ_NETWORK],
   );
 }

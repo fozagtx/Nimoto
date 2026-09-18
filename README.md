@@ -132,12 +132,9 @@ pnpm treasury:keygen
 # TREASURY_ADDRESS=NQ.. .... ....
 ```
 
-Paste both into Render (never into the repo), fund the address, and point the server at a node:
-
-```bash
-NIMIQ_NETWORK=test-albatross   NIMIQ_RPC_URL=https://rpc.testnet.nimiqwatch.com
-NIMIQ_NETWORK=main-albatross   NIMIQ_RPC_URL=https://rpc.nimiqwatch.com
-```
+Paste both into Render (never into the repo) and fund the address. The RPC node is chosen from
+`NIMIQ_NETWORK` — `https://rpc.testnet.nimiqwatch.com` for `test-albatross`, `https://rpc.nimiqwatch.com` for
+`main-albatross` — so `NIMIQ_RPC_URL` only needs setting if you run your own node.
 
 Testnet NIM comes from the faucet:
 
