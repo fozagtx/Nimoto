@@ -15,8 +15,29 @@
     height: 100%;
   }
 
+  /* Paint the canvas itself so overscroll and browser chrome match the page. */
+  html {
+    @apply bg-white;
+  }
+
   body {
-    @apply bg-white font-body text-ink antialiased;
+    @apply font-body text-ink antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  img,
+  canvas {
+    outline: 1px solid rgb(0 0 0 / 0.08);
+    outline-offset: -1px;
   }
 
   :focus-visible {
@@ -37,6 +58,29 @@
 @layer components {
   .surface {
     @apply rounded-2xl border-2 border-hairline bg-white shadow-card;
+  }
+
+  /* Changing digits keep their width: timers, scores, ranks, counts. */
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Faint grain for the one or two hero surfaces; tiled bitmap, no live turbulence. */
+  .grain {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.12 0'/></filter><rect width='128' height='128' filter='url(%23n)'/></svg>");
+    background-size: 128px 128px;
   }
 
   /* Glass: the lens and the layer it bends travel together on one spring. */
@@ -70,7 +114,7 @@
   }
 
   .glass-tabs-option {
-    @apply flex min-h-[40px] items-center justify-center rounded-full px-3 font-display text-xs font-extrabold uppercase tracking-cta transition-colors duration-150;
+    @apply flex min-h-[44px] items-center justify-center rounded-full px-3 font-display text-xs font-extrabold uppercase tracking-cta;
   }
 
   .glass-tabs-option--lit {

@@ -48,7 +48,7 @@ export function HomeScreen({ navigate }: { navigate: (route: Route) => void }) {
         tone="error"
         title="We could not reach Nimoto"
         description={loadError}
-        action={<Button onClick={() => window.location.reload()}>Try again</Button>}
+        action={<Button nested onClick={() => window.location.reload()}>Try again</Button>}
       />
     );
   }
@@ -64,13 +64,13 @@ export function HomeScreen({ navigate }: { navigate: (route: Route) => void }) {
 
   return (
     <div className="space-y-4">
-      <section className="surface relative overflow-hidden p-5">
+      <section className="surface grain p-5">
         <div className="flex items-start justify-between gap-3">
           <div ref={heroRef} className="t-stagger">
             <p className="t-stagger-line t-stagger-line--1 font-display text-xs font-extrabold uppercase tracking-cta text-owl">
               Today’s challenge
             </p>
-            <h1 className="t-stagger-line t-stagger-line--2 font-display text-3xl font-black text-navy">
+            <h1 className="t-stagger-line t-stagger-line--2 font-display text-3xl font-black tracking-tight text-navy">
               NIMOTO
             </h1>
             <p className="t-stagger-line t-stagger-line--3 mt-1 text-sm text-muted">
@@ -80,7 +80,7 @@ export function HomeScreen({ navigate }: { navigate: (route: Route) => void }) {
           <Mascot mood={rankedDone ? 'cheer' : 'happy'} size={84} />
         </div>
 
-        <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <dl className="mt-4 grid grid-cols-2 gap-2">
           <Stat label="Prize pool" value={`${today.prizePoolNim} NIM`} accent="text-owl" />
           <Stat label="Players today" value={formatNumber(today.playersToday)} accent="text-macaw" />
           <Stat label="Your streak" value={`${today.me?.currentStreak ?? 0} 🔥`} accent="text-fox" />
@@ -95,7 +95,7 @@ export function HomeScreen({ navigate }: { navigate: (route: Route) => void }) {
           <StatusMessage
             title="Today’s run is closed"
             description="Prizes are being settled. Come back at 00:00 UTC for a fresh challenge."
-            action={<Button variant="secondary" onClick={() => navigate({ name: 'leaderboard' })}>See leaderboard</Button>}
+            action={<Button nested variant="secondary" onClick={() => navigate({ name: 'leaderboard' })}>See leaderboard</Button>}
           />
         ) : rankedDone ? (
           <StatusMessage
@@ -103,7 +103,7 @@ export function HomeScreen({ navigate }: { navigate: (route: Route) => void }) {
             title="Ranked run complete"
             description={`You scored ${formatNumber(rankedAttempt?.totalScore ?? 0)} points today.`}
             action={
-              <Button variant="secondary" onClick={() => navigate({ name: 'leaderboard' })}>
+              <Button nested variant="secondary" onClick={() => navigate({ name: 'leaderboard' })}>
                 See where you landed
               </Button>
             }
@@ -161,9 +161,9 @@ export function HomeScreen({ navigate }: { navigate: (route: Route) => void }) {
 
 function Stat({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div className="rounded-xl border-2 border-hairline p-3">
+    <div className="rounded-lg border-2 border-hairline bg-white p-3">
       <dt className="text-[11px] font-bold uppercase tracking-cta text-muted">{label}</dt>
-      <dd className={`font-display text-lg font-black ${accent}`}>{value}</dd>
+      <dd className={`num font-display text-lg font-black ${accent}`}>{value}</dd>
     </div>
   );
 }

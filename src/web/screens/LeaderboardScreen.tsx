@@ -26,7 +26,7 @@ export function LeaderboardScreen({ navigate }: { navigate: (route: Route) => vo
         tone="error"
         title="Leaderboard unavailable"
         description={error}
-        action={<Button onClick={() => navigate({ name: 'home' })}>Back home</Button>}
+        action={<Button nested onClick={() => navigate({ name: 'home' })}>Back home</Button>}
       />
     );
   }
@@ -41,14 +41,14 @@ export function LeaderboardScreen({ navigate }: { navigate: (route: Route) => vo
         <p className="text-sm text-muted">
           {board.challengeDate} · {formatNumber(board.playersToday)} players · {board.prizePoolNim} NIM pool
         </p>
-        <p className="mt-2 stat-chip border-beetle text-beetle">Resets in {formatCountdown(board.msRemaining)}</p>
+        <p className="num mt-2 stat-chip border-beetle text-beetle">Resets in {formatCountdown(board.msRemaining)}</p>
       </header>
 
       {board.entries.length === 0 ? (
         <StatusMessage
           title="Nobody has finished yet"
           description="Be the first to complete today’s ranked run."
-          action={<Button onClick={() => navigate({ name: 'play', mode: 'ranked' })}>Play now</Button>}
+          action={<Button nested onClick={() => navigate({ name: 'play', mode: 'ranked' })}>Play now</Button>}
         />
       ) : (
         <ol className="space-y-2">
@@ -79,7 +79,7 @@ function Row({ entry }: { entry: LeaderboardEntry }) {
         entry.isMe ? 'border-macaw bg-macaw-soft' : 'border-hairline bg-white'
       }`}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 border-hairline font-display text-sm font-black text-navy">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border-2 border-hairline font-display text-sm font-black text-navy num">
         {entry.rank}
       </span>
       <div className="min-w-0 flex-1">
@@ -87,11 +87,11 @@ function Row({ entry }: { entry: LeaderboardEntry }) {
           {entry.displayName ?? entry.walletAddressAbbreviated}
           {entry.isMe ? <span className="ml-2 text-xs uppercase tracking-cta text-macaw">You</span> : null}
         </p>
-        <p className="text-xs text-muted">{formatDuration(entry.totalDurationMs)}</p>
+        <p className="num text-xs text-muted">{formatDuration(entry.totalDurationMs)}</p>
       </div>
       <div className="text-right">
-        <p className="font-display text-base font-black text-navy">{formatNumber(entry.totalScore)}</p>
-        {entry.prizeNim ? <p className="text-xs font-bold text-owl">{entry.prizeNim} NIM</p> : null}
+        <p className="num font-display text-base font-black text-navy">{formatNumber(entry.totalScore)}</p>
+        {entry.prizeNim ? <p className="num text-xs font-bold text-owl">{entry.prizeNim} NIM</p> : null}
       </div>
     </li>
   );

@@ -12,17 +12,23 @@ const VARIANTS: Record<Variant, string> = {
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   full?: boolean;
+  /** Inside a `.surface`: tighter corner so it stays concentric with the card. */
+  nested?: boolean;
   children: ReactNode;
 }
 
-/** Tactile button: flat bottom lip that disappears on press, never a blurred shadow. */
-export function Button({ variant = 'primary', full = false, className = '', ...props }: ButtonProps) {
+/**
+ * Tactile button: flat bottom lip that disappears on press, never a blurred
+ * shadow. Hover recolours instantly; only the press travels.
+ */
+export function Button({ variant = 'primary', full = false, nested = false, className = '', ...props }: ButtonProps) {
   return (
     <button
       {...props}
       className={[
-        'inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 px-5 py-3',
-        'font-display text-sm font-extrabold uppercase tracking-cta transition-all duration-100',
+        'inline-flex min-h-[48px] items-center justify-center gap-2 border-2 px-5 py-3',
+        nested ? 'rounded-nested' : 'rounded-xl',
+        'font-display text-sm font-extrabold uppercase tracking-cta transition-[transform,box-shadow] duration-100',
         'active:translate-y-[4px] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0',
         VARIANTS[variant],
         full ? 'w-full' : '',

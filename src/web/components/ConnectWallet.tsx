@@ -62,7 +62,7 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
     return (
       <div ref={shakeRef} className="t-input inline-flex rounded-xl">
         <Button
-          className="min-h-[40px] px-3 py-2 text-xs"
+          className="min-h-[40px] py-2 pl-2.5 pr-3 text-xs"
           onClick={connect}
           disabled={busy || status === 'loading'}
         >
@@ -84,7 +84,7 @@ export function ConnectWallet({ compact = false }: { compact?: boolean }) {
       <p className="mt-1 text-sm text-muted">
         You sign a one-time message to prove the address is yours. Nimoto never asks for your keys.
       </p>
-      <Button full className="mt-4" onClick={connect} disabled={busy || status === 'loading'}>
+      <Button nested full className="mt-4" onClick={connect} disabled={busy || status === 'loading'}>
         <WalletIcon />
         <span ref={swap.ref} className="t-text-swap">
           {swap.label}
