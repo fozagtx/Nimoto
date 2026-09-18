@@ -27,7 +27,8 @@
     "db:seed": "tsx src/db/seed/run.ts",
     "challenge:create": "tsx src/server/scripts/create-challenge.ts",
     "settle": "tsx src/server/scripts/settle.ts",
-    "payouts:run": "tsx src/server/scripts/run-payouts.ts"
+    "payouts:run": "tsx src/server/scripts/run-payouts.ts",
+    "treasury:keygen": "tsx src/server/scripts/generate-treasury-key.ts"
   },
   "dependencies": {
     "@hono/node-server": "1.13.7",
