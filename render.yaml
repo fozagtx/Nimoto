@@ -1,9 +1,24 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
 #
-# The database is Neon, not a Render Postgres instance: set DATABASE_URL in the
-# Render dashboard to the Neon *pooled* connection string, e.g.
+# Secrets are declared once, on nimoto-api, and the cron jobs read them back
+# with `fromService`. (They can't live in an envVarGroup: Render forbids
+# `sync: false` there, so a group would sync the keys with empty values.)
+#
+# The database is Neon, not a Render Postgres instance: set DATABASE_URL to the
+# Neon *pooled* connection string, e.g.
 #   postgresql://user:pass@ep-xxx-pooler.eu-central-1.aws.neon.tech/nimoto?sslmode=require
 # Neon always requires TLS, hence DATABASE_SSL=true.
+
+envVarGroups:
+  # Non-secret settings shared by the API and both cron jobs.
+  - name: nimoto-runtime
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_SSL
+        value: "true"
+      - key: NIMIQ_NETWORK
+        value: test-albatross
 
 services:
   - type: web
@@ -18,14 +33,12 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
-      - key: NODE_VERSION
-        value: "22"
+      - fromGroup: nimoto-runtime
       - key: NODE_ENV
         value: production
+      # The only secret you have to type: the Neon pooled connection string.
       - key: DATABASE_URL
-        sync: false # Neon pooled connection string
-      - key: DATABASE_SSL
-        value: "true"
+        sync: false
       - key: ADMIN_API_TOKEN
         generateValue: true
       - key: CORS_ORIGINS
@@ -38,9 +51,8 @@ services:
           type: web
           name: nimoto-web
           envVarKey: RENDER_EXTERNAL_URL
-      - key: NIMIQ_NETWORK
-        value: test-albatross
-      # Payouts stay disabled until all three are set by hand (see README → Treasury wallet).
+      # Leave all three empty to keep payouts off: settlement still records who
+      # won what, it just never signs a transaction. See README → Treasury wallet.
       - key: NIMIQ_RPC_URL
         sync: false
       - key: TREASURY_PRIVATE_KEY
@@ -89,12 +101,12 @@ services:
     buildCommand: corepack enable && pnpm install --frozen-lockfile
     startCommand: pnpm challenge:create -- --days 3
     envVars:
-      - key: NODE_VERSION
-        value: "22"
+      - fromGroup: nimoto-runtime
       - key: DATABASE_URL
-        sync: false
-      - key: DATABASE_SSL
-        value: "true"
+        fromService:
+          type: web
+          name: nimoto-api
+          envVarKey: DATABASE_URL
       - key: ADMIN_API_TOKEN
         fromService:
           type: web
@@ -112,22 +124,29 @@ services:
     buildCommand: corepack enable && pnpm install --frozen-lockfile
     startCommand: pnpm settle && pnpm payouts:run -- --limit 50
     envVars:
-      - key: NODE_VERSION
-        value: "22"
+      - fromGroup: nimoto-runtime
       - key: DATABASE_URL
-        sync: false
-      - key: DATABASE_SSL
-        value: "true"
+        fromService:
+          type: web
+          name: nimoto-api
+          envVarKey: DATABASE_URL
       - key: ADMIN_API_TOKEN
         fromService:
           type: web
           name: nimoto-api
           envVarKey: ADMIN_API_TOKEN
-      - key: NIMIQ_NETWORK
-        value: test-albatross
       - key: NIMIQ_RPC_URL
-        sync: false
+        fromService:
+          type: web
+          name: nimoto-api
+          envVarKey: NIMIQ_RPC_URL
       - key: TREASURY_PRIVATE_KEY
-        sync: false
+        fromService:
+          type: web
+          name: nimoto-api
+          envVarKey: TREASURY_PRIVATE_KEY
       - key: TREASURY_ADDRESS
-        sync: false
+        fromService:
+          type: web
+          name: nimoto-api
+          envVarKey: TREASURY_ADDRESS
