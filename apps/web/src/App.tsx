@@ -11,7 +11,7 @@ import { SessionProvider, useSession } from './state/session.js';
 import { api } from './lib/api.js';
 
 function Shell() {
-  const { status, user, signOut } = useSession();
+  const { status, user, signOut, mock } = useSession();
   const [route, setRoute] = useState<Route>(() => hashToRoute(window.location.hash));
   const [online, setOnline] = useState(() => window.navigator.onLine);
 
@@ -45,6 +45,15 @@ function Shell() {
       >
         Skip to content
       </a>
+
+      {mock ? (
+        <p
+          role="status"
+          className="rounded-xl border-2 border-fox bg-[#fff4e0] px-3 py-2 text-center font-display text-xs font-extrabold uppercase tracking-cta text-fox"
+        >
+          Dev wallet — mock Nimiq provider active
+        </p>
+      ) : null}
 
       {!online ? (
         <p role="alert" className="rounded-xl border-2 border-fox bg-[#fff4e0] p-3 text-sm font-bold text-navy">

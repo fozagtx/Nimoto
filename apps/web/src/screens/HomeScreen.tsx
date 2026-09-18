@@ -9,7 +9,7 @@ import { useSession } from '../state/session.js';
 import type { Route } from '../routes.js';
 
 export function HomeScreen({ navigate }: { navigate: (route: Route) => void }) {
-  const { status, user, signIn, error: authError, clearError, mock } = useSession();
+  const { status, user, signIn, error: authError, clearError } = useSession();
   const [today, setToday] = useState<TodayChallengeResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [remaining, setRemaining] = useState(0);
@@ -80,15 +80,6 @@ export function HomeScreen({ navigate }: { navigate: (route: Route) => void }) {
           <Stat label="Resets in" value={formatCountdown(remaining)} accent="text-beetle" />
         </dl>
       </section>
-
-      {mock ? (
-        <p
-          role="status"
-          className="rounded-xl border-2 border-fox bg-[#fff4e0] px-3 py-2 text-center font-display text-xs font-extrabold uppercase tracking-cta text-fox"
-        >
-          Dev wallet — mock Nimiq provider active
-        </p>
-      ) : null}
 
       {authError ? (
         <div role="alert" className="surface border-cardinal bg-cardinal-soft p-4 text-sm">
