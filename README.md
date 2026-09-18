@@ -10,8 +10,6 @@ Nimoto is a daily learning game that lives inside [Nimiq Pay](https://nimiq.com)
 new five-question run goes live. You get one ranked shot at it. Answer fast and right, climb the day's
 leaderboard, and the top ten are paid real NIM — straight to the wallet you played with.
 
-No account. No password. No token to buy. Your Nimiq wallet *is* your profile.
-
 <p align="center">
   <img src="./docs/screenshots/home.png" width="180" alt="Home: today's challenge, prize pool, streak">
   <img src="./docs/screenshots/leaderboard.png" width="180" alt="Leaderboard for today">
