@@ -69,17 +69,27 @@ sent to the browser before an answer is submitted.
 ## Prizes and settlement
 
 Default ladder per day: 30 / 15 / 10 NIM for ranks 1–3 and 5 NIM for ranks 4–10 (90 NIM pool). Sponsors can
-top up a day's pool by sending NIM from their own wallet; the treasury is never exposed as a generic send
-endpoint.
+top up a day's pool by sending NIM to `PRIZE_POOL_ADDRESS` from their own wallet.
+
+**Prizes are paid by hand.** The server holds no private key and signs nothing — settlement only decides who
+won what, and you transfer the NIM from the prize pool wallet yourself, then record it:
 
 ```bash
 pnpm settle -- 2026-01-31 --dry-run   # preview allocation
-pnpm settle -- 2026-01-31             # idempotent: records payouts once
-pnpm payouts:run -- --limit 25        # retryable payout worker
+pnpm settle -- 2026-01-31             # idempotent: records who is owed what
+pnpm winners -- --date 2026-01-31     # the list to pay (add --csv to export)
 ```
 
-Settlement refuses to run twice, validates every recipient, and enforces both a per-payout and a daily cap.
-Without `TREASURY_PRIVATE_KEY` the API runs in "no payout" mode: allocations are recorded, nothing is sent.
+Each winner's recipient address is their own wallet, so you can send from the Nimiq Wallet app. Mark a prize
+paid once the transfer is confirmed:
+
+```bash
+curl -X POST -H "authorization: Bearer $ADMIN_API_TOKEN" \
+  -H 'content-type: application/json' -d '{"transactionHash":"..."}' \
+  https://<api>/api/admin/payouts/<payoutId>/paid
+```
+
+Settlement refuses to run twice and validates every recipient, so the winner list is stable and re-runnable.
 
 ## Testing
 
@@ -100,8 +110,8 @@ TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/nimoto_test pnpm t
 ## Deployment
 
 [`render.yaml`](./render.yaml) is a Render Blueprint: API web service, static frontend, and two cron jobs
-(pre-create tomorrow's challenges at 23:50 UTC, settle + pay out at 00:10 UTC). The API runs `pnpm db:migrate`
-as its pre-deploy step.
+(pre-create tomorrow's challenges at 23:50 UTC, settle the closed day at 00:10 UTC). The API runs
+`pnpm db:migrate` as its pre-deploy step.
 
 The database is **Neon**, not Render Postgres. Create the project, then set on every service:
 
@@ -117,27 +127,11 @@ connections much lower. Seed the question bank once against Neon:
 DATABASE_URL=... DATABASE_SSL=true pnpm db:seed
 ```
 
-`TREASURY_PRIVATE_KEY` / `TREASURY_ADDRESS` are left unset in the blueprint on purpose: until you fill them in
-the Render dashboard, settlement records allocations and sends nothing.
+### Prize pool wallet
 
-### Treasury wallet
-
-The treasury is an ordinary Nimiq account whose key signs the prize transactions — no contract, no custody by
-Nimiq. The Nimiq Wallet **cannot** export a raw private key (only a Login File / 24 recovery words), and the
-server needs the 32-byte hex, so generate the keypair here instead:
-
-```bash
-pnpm treasury:keygen
-# TREASURY_PRIVATE_KEY=<64 hex chars>
-# TREASURY_ADDRESS=NQ.. .... ....
-```
-
-Paste both into Render (never into the repo), fund the address, and point the server at a node:
-
-```bash
-NIMIQ_NETWORK=test-albatross   NIMIQ_RPC_URL=https://rpc.testnet.nimiqwatch.com
-NIMIQ_NETWORK=main-albatross   NIMIQ_RPC_URL=https://rpc.nimiqwatch.com
-```
+`PRIZE_POOL_ADDRESS` is a plain public NQ address — the one sponsors top up and the one you pay winners from,
+using the ordinary Nimiq Wallet. It is committed in the blueprint because it is not a secret, and no private
+key exists anywhere in the app, the env, or the repo.
 
 Testnet NIM comes from the faucet:
 
@@ -145,9 +139,11 @@ Testnet NIM comes from the faucet:
 curl -X POST -d "address=NQ.. .... ...." https://faucet.pos.nimiq-testnet.com/tapit
 ```
 
-Public nodes may reject `sendRawTransaction`; if payouts fail with an RPC error, run your own
-`core-rs-albatross` node and use its URL. Keep only a day or two of prize money on the address —
-`MAX_DAILY_PAYOUT_NIM` and `MAX_SINGLE_PAYOUT_NIM` cap what the worker can send regardless.
+## Share cards
+
+After a run the results screen renders a 1200×675 PNG on a canvas — score, rank, top-N%, streak, NIM won and
+the share of the day's pool — and offers the native share sheet (falling back to a download) plus a prefilled
+X post. Set `VITE_SOCIAL_HANDLE` to the handle those posts should tag; it defaults to `@nimoto`.
 
 ## Security notes
 

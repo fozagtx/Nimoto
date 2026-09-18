@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AttemptResultResponse } from '@/shared';
 import { api } from '../lib/api.js';
 import { formatDuration, formatNumber, ordinal } from '../lib/format.js';
 import { shareOrCopy } from '../lib/referral.js';
+import {
+  drawShareCard,
+  renderShareCard,
+  shareCardCaption,
+  shareCardImage,
+  tweetIntentUrl,
+} from '../lib/share-card.js';
 import { Button } from '../components/Button.js';
 import { Mascot } from '../components/Mascot.js';
 import type { Route } from '../routes.js';
+
+const HANDLE = import.meta.env.VITE_SOCIAL_HANDLE ?? '@nimoto';
 
 export function ResultsPanel({
   result,
@@ -14,8 +23,21 @@ export function ResultsPanel({
   result: AttemptResultResponse;
   navigate: (route: Route) => void;
 }) {
-  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied' | 'failed'>('idle');
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'downloaded' | 'copied' | 'failed'>('idle');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const ranked = result.mode === 'ranked';
+  const referralUrl = window.location.origin;
+  const caption = shareCardCaption(result);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    try {
+      drawShareCard(canvas, { result, referralUrl, handle: HANDLE });
+    } catch {
+      // Canvas-less environments simply show no preview; text sharing still works.
+    }
+  }, [result, referralUrl]);
 
   return (
     <div className="space-y-4">
@@ -45,9 +67,22 @@ export function ResultsPanel({
 
         {ranked && result.prizeNim ? (
           <p className="mt-4 rounded-xl border-2 border-owl bg-owl-soft p-3 font-bold text-navy">
-            On track for {result.prizeNim} NIM if this rank holds at 00:00 UTC.
+            On track for {result.prizeNim} NIM if this rank holds at 00:00 UTC. Prizes are sent by hand — we
+            reach out to winners at their wallet address.
           </p>
         ) : null}
+      </section>
+
+      <section className="surface p-4">
+        <p className="mb-3 font-display text-xs font-extrabold uppercase tracking-cta text-muted">
+          Your shareable card
+        </p>
+        <canvas
+          ref={canvasRef}
+          role="img"
+          aria-label={caption}
+          className="w-full rounded-xl border-2 border-hairline"
+        />
       </section>
 
       <div className="space-y-3">
@@ -55,19 +90,35 @@ export function ResultsPanel({
           full
           onClick={async () => {
             void api.track('share_clicked');
-            const outcome = await shareOrCopy(result.shareText, window.location.origin);
-            setShareState(outcome);
+            try {
+              const blob = await renderShareCard({ result, referralUrl, handle: HANDLE });
+              setShareState(await shareCardImage(blob, caption, referralUrl));
+            } catch {
+              setShareState(await shareOrCopy(result.shareText, referralUrl));
+            }
           }}
         >
-          Share your score
+          Share your card
+        </Button>
+        <Button
+          full
+          variant="ghost"
+          onClick={() => {
+            void api.track('share_clicked');
+            window.open(tweetIntentUrl(caption, referralUrl, HANDLE), '_blank', 'noopener');
+          }}
+        >
+          Post on X
         </Button>
         {shareState !== 'idle' ? (
           <p role="status" className="text-center text-sm font-bold text-muted">
             {shareState === 'shared'
               ? 'Shared.'
-              : shareState === 'copied'
-                ? 'Copied to your clipboard.'
-                : 'Sharing is unavailable — copy the text manually.'}
+              : shareState === 'downloaded'
+                ? 'Image saved — attach it to your post.'
+                : shareState === 'copied'
+                  ? 'Copied to your clipboard.'
+                  : 'Sharing is unavailable — copy the text manually.'}
           </p>
         ) : null}
         <div className="grid grid-cols-2 gap-3">

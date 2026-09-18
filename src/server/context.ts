@@ -2,7 +2,6 @@ import { createDatabase, type Database } from '@/db';
 import { defaultPrizeConfig, nimToLuna, type PrizeConfig } from '@/shared';
 import type { Env } from './env.js';
 import { RateLimiter } from './lib/rate-limit.js';
-import { createTreasury, type Treasury } from './services/treasury.js';
 
 export interface AppContext {
   env: Env;
@@ -12,7 +11,8 @@ export interface AppContext {
     maxDailyPayoutLuna: bigint;
     maxSinglePayoutLuna: bigint;
   };
-  treasury: Treasury;
+  /** Public account that collects sponsorships and funds the manual prize transfers. */
+  prizePoolAddress: string | null;
   limiters: {
     auth: RateLimiter;
     answer: RateLimiter;
@@ -31,7 +31,7 @@ export function createAppContext(env: Env): AppContext {
       maxDailyPayoutLuna: nimToLuna(env.MAX_DAILY_PAYOUT_NIM),
       maxSinglePayoutLuna: nimToLuna(env.MAX_SINGLE_PAYOUT_NIM),
     },
-    treasury: createTreasury(env),
+    prizePoolAddress: env.PRIZE_POOL_ADDRESS ?? null,
     limiters: {
       auth: new RateLimiter(env.RATE_LIMIT_WINDOW_MS, 20),
       answer: new RateLimiter(env.RATE_LIMIT_WINDOW_MS, 60),

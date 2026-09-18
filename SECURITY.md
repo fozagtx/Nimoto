@@ -23,10 +23,10 @@ Answers faster than 350 ms are flagged.
 **Admin surface.** `/api/admin/*` and the CLI require `ADMIN_API_TOKEN`. A wallet session — including the
 operator's own — never grants admin access.
 
-**Treasury.** The private key lives only in the server process environment, injected from a secret manager. It
-is never present in the frontend, in Git, in logs, or in any API response. There is no endpoint that sends an
-arbitrary amount to an arbitrary address: payouts are derived from a settled leaderboard, verified against the
-recorded recipient and amount, bounded by a per-payout and a daily cap, and idempotent per (challenge, rank).
+**Prize money.** The app holds no private key and can move no funds: settlement only writes who is owed what,
+derived from a settled leaderboard, bounded by a per-payout and a daily cap, and idempotent per (challenge,
+rank). An operator transfers the prizes from the prize pool wallet by hand and records the transaction hash
+through the admin surface, so the worst case of a compromised server is wrong bookkeeping, not lost NIM.
 
 **Data minimisation.** We store the wallet address, run data, streaks, referral relationships and coarse
 product events. No IP logging for analytics, no device fingerprinting, no third-party trackers.

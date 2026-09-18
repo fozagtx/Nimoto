@@ -75,10 +75,29 @@ describe('settlement and admin access', () => {
     expect(await payoutCount()).toBe(2);
   });
 
-  it('refuses to send payouts when no treasury is configured', async () => {
-    const res = await harness.request('/api/admin/payouts/run', { method: 'POST', headers: adminHeaders });
-    expect(res.status).toBe(400);
-    expect(((await res.json()) as any).error.code).toBe('treasury_disabled');
+  it('lists winners and records prizes paid by hand', async () => {
+    const today = toChallengeDate(new Date());
+    const winner = await signIn(harness, createWallet(34));
+    await playRankedRun(harness, winner);
+    await harness.request(`/api/admin/settlements/${today}`, { method: 'POST', headers: adminHeaders });
+
+    const listed = await harness.request(`/api/admin/settlements/${today}/winners`, { headers: adminHeaders });
+    const { winners } = (await listed.json()) as any;
+    expect(winners).toHaveLength(1);
+    expect(winners[0].amountNim).toBe('30');
+    expect(winners[0].status).toBe('pending');
+
+    const paid = await harness.request(`/api/admin/payouts/${winners[0].payoutId}/paid`, {
+      method: 'POST',
+      headers: adminHeaders,
+      body: JSON.stringify({ transactionHash: 'abc123' }),
+    });
+    expect(paid.status).toBe(200);
+
+    const relisted = await harness.request(`/api/admin/settlements/${today}/winners`, { headers: adminHeaders });
+    const after = (await relisted.json()) as any;
+    expect(after.winners[0].status).toBe('confirmed');
+    expect(after.winners[0].transactionHash).toBe('abc123');
   });
 
   it('reports a missing challenge instead of inventing one', async () => {

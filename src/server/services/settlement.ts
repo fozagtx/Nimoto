@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { auditLogs, dailyChallenges, prizePayouts } from '@/db';
 import {
   allocatePrizes,
@@ -136,82 +136,55 @@ export async function settleChallenge(
   return { plan, created };
 }
 
-export interface PayoutRunResult {
-  processed: number;
-  confirmed: number;
-  failed: number;
+export interface WinnerRow extends SettlementLine {
+  payoutId: string;
+  status: string;
+  transactionHash: string | null;
 }
 
-/** Sends every pending payout; failures stay retryable and are never double-sent. */
-export async function runPayouts(ctx: AppContext, actor: string, limit = 25): Promise<PayoutRunResult> {
-  if (!ctx.treasury.enabled) {
-    throw ApiError.badRequest('treasury_disabled', 'No treasury is configured, payouts cannot be sent');
-  }
-
-  const claimable = await ctx.db
-    .select({ id: prizePayouts.id })
+/** The list you work through by hand: who is owed what for a settled day. */
+export async function listWinners(ctx: AppContext, date: ChallengeDate): Promise<WinnerRow[]> {
+  const rows = await ctx.db
+    .select({ payout: prizePayouts })
     .from(prizePayouts)
-    .where(inArray(prizePayouts.status, ['pending', 'failed']))
-    .limit(limit);
-  if (claimable.length === 0) return { processed: 0, confirmed: 0, failed: 0 };
+    .innerJoin(dailyChallenges, eq(prizePayouts.challengeId, dailyChallenges.id))
+    .where(eq(dailyChallenges.challengeDate, date))
+    .orderBy(asc(prizePayouts.rank));
 
-  const claimed = await ctx.db
+  return rows.map(({ payout }) => ({
+    rank: payout.rank,
+    userId: payout.userId,
+    attemptId: payout.attemptId,
+    payoutId: payout.id,
+    recipientAddress: payout.recipientAddress,
+    amountLuna: payout.amountLuna,
+    amountNim: lunaToNim(BigInt(payout.amountLuna)),
+    status: payout.status,
+    transactionHash: payout.transactionHash,
+  }));
+}
+
+/** Records a prize that was transferred by hand from the prize pool wallet. */
+export async function markPayoutPaid(
+  ctx: AppContext,
+  payoutId: string,
+  actor: string,
+  transactionHash?: string,
+): Promise<{ payoutId: string; status: 'confirmed' }> {
+  const [updated] = await ctx.db
     .update(prizePayouts)
-    .set({
-      status: 'processing',
-      attemptCount: sql`${prizePayouts.attemptCount} + 1`,
-      updatedAt: new Date(),
-    })
-    .where(
-      and(
-        inArray(
-          prizePayouts.id,
-          claimable.map((row) => row.id),
-        ),
-        inArray(prizePayouts.status, ['pending', 'failed']),
-      ),
-    )
-    .returning();
-
-  let confirmed = 0;
-  let failed = 0;
-
-  for (const payout of claimed) {
-    const amountLuna = BigInt(payout.amountLuna);
-    if (amountLuna > ctx.limits.maxSinglePayoutLuna || !isValidAddress(payout.recipientAddress)) {
-      await ctx.db
-        .update(prizePayouts)
-        .set({ status: 'failed', error: 'failed payout safety check', updatedAt: new Date() })
-        .where(eq(prizePayouts.id, payout.id));
-      failed += 1;
-      continue;
-    }
-    try {
-      const { transactionHash } = await ctx.treasury.send({
-        recipientAddress: payout.recipientAddress,
-        amountLuna,
-      });
-      await ctx.db
-        .update(prizePayouts)
-        .set({ status: 'broadcast', transactionHash, error: null, updatedAt: new Date() })
-        .where(eq(prizePayouts.id, payout.id));
-      confirmed += 1;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'unknown payout error';
-      await ctx.db
-        .update(prizePayouts)
-        .set({ status: 'failed', error: message, updatedAt: new Date() })
-        .where(eq(prizePayouts.id, payout.id));
-      logger.error('payout failed', { payoutId: payout.id, message });
-      failed += 1;
-    }
-  }
+    .set({ status: 'confirmed', transactionHash: transactionHash ?? null, error: null, updatedAt: new Date() })
+    .where(eq(prizePayouts.id, payoutId))
+    .returning({ id: prizePayouts.id });
+  if (!updated) throw ApiError.notFound('payout_not_found', `No payout with id ${payoutId}`);
 
   await ctx.db.insert(auditLogs).values({
     actor,
-    action: 'payouts.run',
-    metadata: { processed: claimed.length, confirmed, failed },
+    action: 'payout.marked_paid',
+    subject: payoutId,
+    metadata: { transactionHash: transactionHash ?? null },
   });
+  logger.info('payout marked paid', { payoutId, transactionHash });
 
-  return { processed: claimed.length, confirmed, failed };
+  return { payoutId, status: 'confirmed' };
 }
