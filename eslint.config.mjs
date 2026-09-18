@@ -5,7 +5,7 @@ import globals from 'globals';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/node_modules/**', 'packages/db/drizzle/**'],
+    ignores: ['dist/**', 'node_modules/**', '.agents/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -21,7 +21,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/web/**/*.{ts,tsx}'],
+    files: ['src/web/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -29,12 +29,12 @@ export default tseslint.config(
   },
   {
     files: [
-      '**/test/**/*.{ts,tsx}',
+      'test/**/*.{ts,tsx}',
       '**/*.test.{ts,tsx}',
-      '**/scripts/**/*.ts',
-      'apps/api/src/lib/logger.ts',
-      'packages/db/src/migrate.ts',
-      'packages/db/src/seed/run.ts',
+      'src/server/scripts/**/*.ts',
+      'src/server/lib/logger.ts',
+      'src/db/migrate.ts',
+      'src/db/seed/run.ts',
     ],
     rules: { 'no-console': 'off', '@typescript-eslint/no-explicit-any': 'off' },
   },

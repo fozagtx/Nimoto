@@ -15,14 +15,18 @@ connect wallet → today's challenge → 5 server-controlled questions → score
 | Web      | React 18, TypeScript, Vite, Tailwind CSS                  |
 | API      | Node 22, Hono, Zod                                        |
 | Data     | PostgreSQL 16, Drizzle ORM + migrations                   |
-| Wallet   | `@nimiq/mini-app-sdk`, signature verification via `@nimiq/core` |
+| Wallet   | `@nimiq/mini-app-sdk` in Nimiq Pay, `@nimiq/hub-api` in the browser, signature verification via `@nimiq/core` |
 | Tests    | Vitest (unit, API integration, web component/flow tests)  |
 
+One package, one `pnpm install`:
+
 ```
-apps/api        Hono API, game engine, settlement, admin CLI
-apps/web        React Mini App
-packages/shared Scoring, prizes, dates, referral + API contracts
-packages/db     Drizzle schema, migrations, question seed bank
+src/server      Hono API, game engine, settlement, admin CLI
+src/web         React Mini App
+src/shared      Scoring, prizes, dates, referral + API contracts
+src/db          Drizzle schema and question seed bank
+migrations      Drizzle SQL migrations
+test            server / shared / web test suites
 ```
 
 ## Quick start
@@ -40,15 +44,16 @@ pnpm db:seed                 # 116-question bank
 pnpm dev                     # API on :8787, web on :5173
 ```
 
-Outside Nimiq Pay there is no wallet provider. For local UI work:
+## Wallet
 
-```bash
-VITE_USE_MOCK_NIMIQ=true pnpm dev:web
-```
+There is exactly one way in, and it is always a real Nimiq wallet:
 
-The mock signs with a deterministic throwaway key, so the API still verifies real signatures — there is no
-server-side auth bypass. A **DEV WALLET** banner is shown whenever it is active, and the mock is stripped from
-production builds.
+- **Inside Nimiq Pay** the injected Mini App provider signs the challenge.
+- **In any other browser** the Connect button opens Nimiq Hub Connect (`VITE_NIMIQ_HUB_URL` points at
+  `https://hub.nimiq-testnet.com` for testnet).
+
+The server issues a single-use nonce, the wallet signs it, and the API verifies the signature against the
+address. No simulated signer exists in any build.
 
 ## Scoring
 
@@ -89,7 +94,7 @@ API integration tests need an empty database:
 
 ```bash
 createdb nimoto_test
-TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/nimoto_test pnpm --filter @nimoto/api test
+TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/nimoto_test pnpm test:node
 ```
 
 ## Security notes
